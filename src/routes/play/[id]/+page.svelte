@@ -4,11 +4,13 @@
 	import type { PageServerData } from './$types';
 	import Game from './game.svelte';
 	import { game } from './stores';
+	import Analytics from '@/lib/components/analytics.svelte';
 
 	export let data: PageServerData;
 
 </script>
 
+<Analytics/>
 <div class="relative flex flex-col py-4">
 	<div class="absolute w-full px-4 flex items-center justify-between">
 		<button aria-label="Back to home" on:click={() => goto('/')} class="m-1 w-5 rounded-full text-accent font-extrabold whitespace-pre rotate-180 ">
