@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 import { derived, readable, writable } from "svelte/store";
-import type { Settings } from "./api/game";
+import { page } from "$app/stores";
 
 export enum Mode {
   LIGHT = 'light',
@@ -35,44 +35,4 @@ theme.subscribe((v) => {
   }
 })
 
-interface Player {
-  games: {[key: string] : Game}
-}
-
-export type Game = {
-  settings: Settings & {id: string},
-  guesses: { guess: string; grade: string }[][]
-}
-
-export const player = writable<Player>({games: {}}, (set) => {
-  if(browser) {
-    let val;
-    try {
-      const prev = window.localStorage.getItem('player');
-      if(!prev) throw Error("No stored player")
-
-      val = JSON.parse(prev)
-    } catch(e) {
-      console.error(e)
-      val = {games: {}}
-    }
-
-    set(val)
-  }
-})
-
-player.subscribe((v) => {
-  if(browser) {
-    window.localStorage.setItem('player', JSON.stringify(v))
-  }
-})
-
-export const time = readable<Date>(new Date(), function start(set) {
-	const interval = setInterval(() => {
-    set(new Date());
-  }, 1000);
- 
-  return function stop() {
-    clearInterval(interval);
-  };
-});
+export const user = derived(page, ($page) => $page.data.auth ? $page.data.auth.user : undefined)
