@@ -24,7 +24,7 @@
 			<h1 class="mb-6 scroll-m-20 text-4xl font-bold tracking-tight lg:text-5xl">
 				scheddy.<span class="text-accent">ai</span>
 			</h1>
-			{#if user}
+			{#if $user}
 				<Event/>
 			{/if}
 		</div>
