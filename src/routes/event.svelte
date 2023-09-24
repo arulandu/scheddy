@@ -15,7 +15,8 @@
 		const res = await fetch('/api/parse', {
 			method: 'POST',
 			body: JSON.stringify({
-				raw
+				raw,
+                date: (new Date()).toLocaleString()
 			})
 		});
 		const { event } = await res.json();

@@ -45,7 +45,7 @@ class Chat {
 export const POST = (async ({ request, locals }) => {
 	if (!isSignedIn(locals)) return json({}, { status: 401 });
 
-	const { raw } = await request.json();
+	const { raw, today } = await request.json();
 
 	const parsed: Partial<EventData> = {
 		startDate: undefined,
@@ -66,29 +66,49 @@ export const POST = (async ({ request, locals }) => {
 	${raw}
 	"
 
-	Today is ${(new Date()).toLocaleString()}.
+	Today is ${today}.
 	`);
 
 	parsed.title = await chat.message('Can you create a short title that describes this text?');
 	parsed.location = await chat.message('What location?');
 	parsed.startDate = await chat.message('What is the start date/time? MM/DD/YY HH:MM:SS AM/PM');
 	parsed.endDate = await chat.message('What is the end date/time? MM/DD/YY HH:MM:SS AM/PM');
-	
-	const parseDate = (date: string|undefined) => {
-		if(!date) return undefined
 
-		for(const s of ["pm", "am"]){
-			if(date.includes(s) && !date.includes(" "+s)){
-				const x = date.indexOf(s)
-				date = date.substring(0, x) + " " + date.substring(x)
+	const parseDate = (date: string | undefined) => {
+		if (!date) return undefined;
+
+		for (const s of ['pm', 'am']) {
+			if (date.includes(s) && !date.includes(' ' + s)) {
+				const x = date.indexOf(s);
+				date = date.substring(0, x) + ' ' + date.substring(x);
 			}
 		}
 
-		const iso = (new Date(date.trim())).toISOString()
-		return iso.replaceAll("-", "").replaceAll(":", "").replaceAll(".","")
-	}
+		date = date.replaceAll("YY", ((new Date()).getUTCFullYear() % 100) + "")
+		
+		let iso = ''
+		try {
+			iso = new Date(date.trim()).toISOString();
+		} catch {
+			return undefined;
+		}
+		return iso
+	};
+
+	const addHour = (date:Date, hr:number) => {
+		const n = new Date(date.getTime())
+		n.setHours(n.getHours()+hr)
+		return n
+	} 
+
 	parsed.startDate = parsed.startDate ? parseDate(parsed.startDate) : undefined;
 	parsed.endDate = parsed.endDate ? parseDate(parsed.endDate) : undefined;
+	
+	if(parsed.startDate && !parsed.endDate) parsed.endDate = addHour(new Date(parsed.startDate), 1).toISOString()
+	if(!parsed.startDate && parsed.endDate) parsed.startDate = addHour(new Date(parsed.endDate), -1).toISOString()
+
+	if(parsed.startDate) parsed.startDate = parsed.startDate.replaceAll('-', '').replaceAll(':', '').replaceAll('.', '');
+	if(parsed.endDate) parsed.endDate = parsed.endDate.replaceAll('-', '').replaceAll(':', '').replaceAll('.', '');
 
 	return json({ event: parsed });
 }) satisfies RequestHandler;
